@@ -1,12 +1,12 @@
-# transit_score
-
-Development of Transit Score measure for CANUE - Canadian Urban Environmental Health Research Consortium. 
-
 ---
 title: "Public Transport Accessibility Index"
 author: "Yulmetova Maria"
 date: '27/04/18'
 ---
+
+# transit_score
+
+Development of Transit Score measure for CANUE - Canadian Urban Environmental Health Research Consortium. 
 
 
 ## Use case
