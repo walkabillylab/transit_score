@@ -1,7 +1,7 @@
 ---
-title: "Public Transport Accessibility Index"
-author: "Yulmetova Maria"
-date: '27/04/18'
+Title: "Public Transport Accessibility Index"
+Author: "Yulmetova Maria"
+Date: '27/04/18'
 ---
 
 # transit_score
