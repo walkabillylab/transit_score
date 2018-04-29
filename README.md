@@ -1,11 +1,13 @@
+# transit_score
+
+Development of Transit Score measure for CANUE - Canadian Urban Environmental Health Research Consortium. 
+
 ---
 title: "Public Transport Accessibility Index"
 author: "Yulmetova Maria"
 date: '27/04/18'
 ---
-# transit_score
 
-Development of Transit Score measure for CANUE - Canadian Urban Environmental Health Research Consortium. 
 
 ## Use case
 The Public Transport Accessibility Index (PTAI) was calculated based on the method described by Saghapour, 2016[1] to measure the access level to public transport for each census tract in different metropolitan areas of Canada. 
