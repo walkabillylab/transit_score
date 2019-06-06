@@ -1,11 +1,7 @@
-
-#2019 may 31 test
 import urllib2
 import zipfile
 import arcpy
-from arcpy import env
 import os
-import pandas as pd
 import csv
 import sys
 import json
