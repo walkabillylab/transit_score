@@ -1,19 +1,16 @@
-import urllib2
-import zipfile
-import arcpy
-import os
-import csv
+import urllib2                         #This is a extensible library for opening URLs
+import zipfile                         #This module provides tools to create, read, write, append, and list a ZIP file
+import arcpy                           #This package provides a useful and productive way to perform geographic data analysis, data conversion, data management, and map automation with Python.
+import os                              #Provides os.path.join 
+import csv                             #This package provides tool to open and read csv files
 import sys
-import json
-from arcpy.sa import *
-arcpy.CheckOutExtension("3D")
-import traceback
+import json                            #This package works with JSON (JavaScript object notation) data
 
 
+#Define a function to convert txt-files (stop_times.txt, trips.txt and routes.txt) to GDB tables
+#Only select data that within the peak hour (7 - 9 am)
 
-
-
-def getGDBtable(txtFileName, gdbTableName,linkNumber):                             #Get GDBtable from txt-file (stop_times, trips and routes)
+def getGDBtable(txtFileName, gdbTableName, linkNumber):                             
     print("Creating a new gdb-table for "+str(txtFileName))
     ispy3 = sys.version_info >= (3, 0)
     if ispy3:
@@ -40,44 +37,47 @@ def getGDBtable(txtFileName, gdbTableName,linkNumber):                          
         for row in reader:
             cur.insertRow(row)
 
-    arrival_time="arrival_ti"
-    route_type="route_type"
+    arrival_time = "arrival_ti"
+    route_type = "route_type"
     field_trip_headsign = "trip_heads"
 
     if arrival_time in fields:                                         #For stop_times table: select stop_times from 7am to 9am
-        stop_time_79=arcpy.TableToTable_conversion(gdbTable, gdb, "stoptime79_L"+str(linkNumber),
+        stop_time_79 = arcpy.TableToTable_conversion(gdbTable, gdb, "stoptime79_L" + str(linkNumber),
                                                  "(\"arrival_ti\" >='07:00:00' AND \"arrival_ti\" <='09:00:00')OR (\"arrival_ti\" >='7:00:00' AND \"arrival_ti\" <='9:00:00')OR (\"arrival_ti\" >=' 7:00:00' AND \"arrival_ti\" <=' 9:00:00')")
         arcpy.DeleteField_management(stop_time_79, "departure_;stop_seque;stop_heads;pickup_typ;drop_off_t;shape_dist")
         print("A new table of all stop times from 7 am to 9 am has been created.")
     if route_type in fields:                                            #For routes table: created several tables for each mode
-        route_type_0 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type_0_L"+str(linkNumber), "route_type = '0'")     #0 - Tram, Streetcar, Light rail.
-        route_type_1 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type_1_L"+str(linkNumber), "route_type = '1'")     #1 - Subway, Metro.
-        route_type_2 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type_2_L"+str(linkNumber), "route_type = '2'")     #2 - Rail.
-        route_type_3=arcpy.TableToTable_conversion(gdbTable, gdb, "route_type_3_L"+str(linkNumber),"route_type = '3'")        #3 - Bus.
+        route_type_0 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type_0_L" + str(linkNumber), "route_type = '0'")     #0 - Tram, Streetcar, Light rail.
+        route_type_1 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type_1_L" + str(linkNumber), "route_type = '1'")     #1 - Subway, Metro.
+        route_type_2 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type_2_L" + str(linkNumber), "route_type = '2'")     #2 - Rail.
+        route_type_3 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type_3_L" + str(linkNumber), "route_type = '3'")     #3 - Bus.
                                                                                                             ##4 - Ferry.
                                                                                                             ##5 - Cable car.
                                                                                                             ##6 - Gondola, Suspended cable car.
                                                                                                             ##7 - Funicular.
-        listTypes=[route_type_0,route_type_1,route_type_2,route_type_3]
+        listTypes = [route_type_0, route_type_1, route_type_2, route_type_3]
         for type in listTypes:
-            arcpy.DeleteField_management(type,"agency_id;route_shor;route_long;route_desc;route_url;route_colo;route_text")
+            arcpy.DeleteField_management(type, "agency_id;route_shor;route_long;route_desc;route_url;route_colo;route_text")
         print("Tables for each route types have been created")
     if field_trip_headsign in fields:
         arcpy.DeleteField_management(gdbTable, "trip_heads;service_id;trip_short;direction_;block_id;wheelchair")
         print("TripsTable has been created")
 
     else:
-        print("no selection for "+str(txtFileName)+str(linkNumber))
+        print("no selection for " + str(txtFileName) + str(linkNumber))
 
 
-def joinField(in_data,in_field,join_table,join_field,fieldName):
-    arcpy.JoinField_management (in_data, in_field, join_table, join_field,fieldName)
-    print("The "+str(fieldName)+" has been added to the "+str(in_data))
+# Define a function to join field and print a message when finished
+def joinField(in_data, in_field, join_table, join_field, fieldName):
+    arcpy.JoinField_management(in_data, in_field, join_table, join_field, fieldName)
+    print("The " + str(fieldName) + " has been added to the " + str(in_data))
 
-def tableToTable(in_rows,tableName,where_clause):
-    arcpy.TableToTable_conversion(in_rows, gdb, tableName,where_clause)
+# Define a function to convert tables
+def tableToTable(in_rows, tableName, where_clause):
+    arcpy.TableToTable_conversion(in_rows, gdb, tableName, where_clause)
 
-def frequencyAnalysis (in_table, out_table, frequency_fields):
+# Define a function to conduct Frequency Analysis and print a message when finished
+def frequencyAnalysis(in_table, out_table, frequency_fields):
     arcpy.Frequency_analysis(in_table, out_table,frequency_fields)
     print("Frequency analysis has been completed.")
 
@@ -322,7 +322,9 @@ pccfIDfield="pccfID"
 
 #Get links that have to be downloaded
 response = urllib2.urlopen('https://api.transitfeeds.com/v1/getLocations?key=b1b09e11-f0f6-40a0-9846-766bdc72cf28')
-data = json.load(response)
+
+#Convert JSON string to Python object
+data = json.load(response)                                                                                         
 locations=data["results"]["locations"]
 links = []
 for_t=0
