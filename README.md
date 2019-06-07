@@ -1,7 +1,6 @@
 ---
 Title: "Public Transport Accessibility Index"
-Author: "Yulmetova Maria"
-Date: '27/04/18'
+Author: "Yulmetova Maria & Wei Liu"
 ---
 
 # transit_score
