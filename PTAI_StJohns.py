@@ -636,3 +636,10 @@ print("WEF has been calculated for DA")
 
 
 print ('Done!')
+
+
+deleteFields=["Join_Count","TARGET_FID","FID_intersectBufDa","FID_buffers","DAUID","geo_code","DA_PopD","DAarea","DA_Pop","sum0","sum1","a0","a1","a2","a3","a4","a5","a6","a7","a8","EFsum_CT0","EFsum_CT1","EFsum_CT2","EFsum_CT3","EFsum_CT4","Shape_Length","Shape_Area"]
+
+for fieldToDelete in deleteFields:
+    if fieldToDelete in PTAI_CT:  
+        arcpy.DeleteField_management(PTAI_CT,fieldToDelete)
