@@ -1,9 +1,10 @@
 # This program is used to download data from transitfeed.com (GTFS) and uncompress the data
-# The result contains a gtfs.zip file and a folder named "gtfs" with TXT files 
-import arcpy
-import json
-import urllib2
-import zipfile 
+# The result contains a gtfs.zip file and a folder named "gtfs" with TXT files
+
+import arcpy                           #This package provides a useful and productive way to perform geographic data analysis, data conversion, data management, and map automation with Python.
+import json                            #This package works with JSON (JavaScript object notation) data
+import urllib2                         #This is a extensible library for opening URLs
+import zipfile                         #This module provides tools to create, read, write, append, and list a ZIP file 
 
 
 output_dir='./gtfs'
@@ -18,8 +19,9 @@ links = []
 for_t=0
 for indexinlocations in locations:
    t = data["results"]["locations"][for_t]["t"]       #t=locations names
-   
-   if "NL" in t:
+
+   # only download data of NL province   
+   if "NL" in t:                                       
       id = data["results"]["locations"][for_t]["id"]
       print("ID is "+str(id))
       getFeed = urllib2.urlopen(
