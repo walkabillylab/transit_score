@@ -85,6 +85,7 @@ def txtToPoints(txtfile,featureName):
     reader = csv.reader(f)
     # First row is column names:
     columns = [name.strip('\xef\xbb\xbf') for name in next(reader)]
+    #columns = [name.strip() for name in next(reader)]
     # Check the stops.txt file for the correct fields: Make sure lat/lon values are present
     if "stop_lat" not in columns:
         arcpy.AddError(
