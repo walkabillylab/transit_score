@@ -1,16 +1,29 @@
+# Developed by Wei Liu (weil [AT] mun [DOT] ca | www.cs.mun.ca/~weil)& Yulmetova Maria
+# Version: Aug 14, 2019
+# Built Environment and Active Populations Lab
+# Memorial University of Newfoundland
 
-import urllib2
-import zipfile
-import arcpy
-import os
-import csv
+
+##This is a generalized script can be used for all the cities,
+##but before running the script, it is important to make sure the
+##input file names are consistent. For example, "DA_Halifax_EqD.shp",
+##"CT_Halifax_EqD.shp", "PCCF_Halifax_EqD.shp", "Roads_Halifax_EqD_ND.nd"
+##are input file names for Halifax, if you want to run the code on other cities
+##make sure you replace "Halifax" to the other city name
+
+
+import urllib2                         #This is a extensible library for opening URLs
+import zipfile                         #This module provides tools to create, read, write, append, and list a ZIP file
+import arcpy                           #This package provides a useful and productive way to perform geographic data analysis, data conversion, data management, and map automation with Python.
+import os                              #Provides os.path.join 
+import csv                             #This package provides tool to open and read csv files
 import sys
-from arcpy.sa import *
 arcpy.CheckOutExtension("3D")
-
 import shutil
 
 
+#Define a function to convert txt-files (stop_times.txt, trips.txt and routes.txt) to GDB tables
+#Only select data that within the peak hour (7 - 9 am)
 def getGDBtable(txtFileName, gdbTableName):                             #Get GDBtable from txt-file (stop_times, trips and routes)
     print("Creating a new gdb-table for "+str(txtFileName))
     ispy3 = sys.version_info >= (3, 0)
@@ -50,9 +63,9 @@ def getGDBtable(txtFileName, gdbTableName):                             #Get GDB
     if route_type in fields:                                            #For routes table: created several tables for each mode
 
 
-        route_type0 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type0", "route_type = '0'")     
-        route_type1 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type1", "route_type = '1'")     
-        route_type2 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type2", "route_type = '2'")     
+        route_type0 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type0", "route_type = '0'")     #0 - Tram, Streetcar, Light rail.     
+        route_type1 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type1", "route_type = '1'")     #1 - Subway, Metro.     
+        route_type2 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type2", "route_type = '2'")     #2 - Rail.     
         route_type3 = arcpy.TableToTable_conversion(gdbTable, gdb, "route_type3", "route_type = '3'")     #3 - Bus.
         listTypes=[route_type0,route_type1,route_type2,route_type3]
         for route_type in listTypes:
@@ -154,13 +167,16 @@ def txtToPoints(txtfile,featureName):
         arcpy.AddError("Error writing stops.txt data to feature class.")
         raise
 
+# Define a function to join field and print a message when finished
 def joinField(in_data,in_field,join_table,join_field,fieldName):
     arcpy.JoinField_management (in_data, in_field, join_table, join_field,fieldName)
     print("The "+str(fieldName)+" has been added to the "+str(in_data))
 
+# Define a function to convert tables
 def tableToTable(in_rows,tableName,where_clause):
     arcpy.TableToTable_conversion(in_rows, gdb, tableName,where_clause)
 
+# Define a function to conduct Frequency Analysis and print a message when finished
 def frequencyAnalysis (in_table, out_table, frequency_fields):
     arcpy.Frequency_analysis(in_table, out_table,frequency_fields)
     print("Frequency analysis has been completed.")
@@ -195,21 +211,9 @@ def spatialJoinSUM(targetFeatures,joinFeatures,output,joinFeaturesfields):
         fieldmappings.replaceFieldMap(newfield, fieldmap)
         efcount=efcount+1
 
-        # Delete fields that are no longer applicable, such as city CITY_NAME and CITY_FIPS
-        # as only the first value will be used by default
-        # x = fieldmappings.findFieldMapIndex("CITY_NAME")
-        # fieldmappings.removeFieldMap(x)
-        # y = fieldmappings.findFieldMapIndex("CITY_FIPS")
-        # fieldmappings.removeFieldMap(y)
 
-        # Run the Spatial Join tool, using the defaults for the join operation and join type
+    # Run the Spatial Join tool, using the defaults for the join operation and join type
     arcpy.SpatialJoin_analysis(targetFeatures, joinFeatures,output, "#", "#", fieldmappings)
-
-
-
-
-
-
 
 
 def calculatePTAI(fc):
@@ -260,43 +264,7 @@ def spatialJoinCTsum(targetFeatures,joinFeatures, output):
             fieldmappings.replaceFieldMap(EF, fieldmap)
     arcpy.SpatialJoin_analysis(targetFeatures, joinFeatures, output, "#", "#", fieldmappings)        
 
-    
-##    # Create a new fieldmappings and add the two input feature classes.
-##    fieldmappings = arcpy.FieldMappings()
-##    fieldmappings.addTable(targetFeatures)
-##    fieldmappings.addTable(joinFeatures)
-##
-##    EFs=["EF0","EF1","EF2","EF3"]
-##
-##    efcount=0                                                                                           
-##    for singleEF in EFs:
-##        
-##        # First get the EF fieldmap. EF is a field in the cities feature class.
-##        # The output will have the DAs with the attributes of the PointWalkWait.
-##        EF = fieldmappings.findFieldMapIndex(singleEF)
-##        fieldmap = fieldmappings.getFieldMap(EF)
-##        # Get the output field's properties as a field object
-##        field = fieldmap.outputField
-##
-##        # Rename the field and pass the updated field object back into the field map
-##        field.name = "EFsum_CT"+str(efcount)
-##        field.aliasName = "EFsum_CT"+str(efcount)
-##        fieldmap.outputField = field
-##
-##        # Set the merge rule to mean
-##        fieldmap.mergeRule = "Sum"
-##        fieldmappings.replaceFieldMap(EF, fieldmap)
-##        efcount=efcount+1
-##
-##        # Delete fields that are no longer applicable, such as city CITY_NAME and CITY_FIPS
-##        # as only the first value will be used by default
-##        # x = fieldmappings.findFieldMapIndex("CITY_NAME")
-##        # fieldmappings.removeFieldMap(x)
-##        # y = fieldmappings.findFieldMapIndex("CITY_FIPS")
-##        # fieldmappings.removeFieldMap(y)
-##
-##        # Run the Spatial Join tool, using the defaults for the join operation and join type
-##    arcpy.SpatialJoin_analysis(targetFeatures, joinFeatures, output, "#", "#", fieldmappings)    
+      
 
 #Variables:
 path = "./NEW_output"
@@ -435,8 +403,6 @@ for m in modes:
 print(allstopsList)
 
 
-
-
 # Calculating population densities ratio
 print('3. Creating buffers and calculation population densities')
     # Create buffers and dissolve
@@ -468,8 +434,6 @@ print(allbuffersList)
 allBuffers=arcpy.Merge_management(allbuffersList, os.path.join(gdb,"allBuffers"), "Shape_Length \"Shape_Length\" false true true 8 Double 0 0 ,First,#,buff400_0,Shape_Length,-1,-1,buff400_1,Shape_Length,-1,-1,buff800_0,Shape_Length,-1,-1,buff800_1,Shape_Length,-1,-1;Shape_Area \"Shape_Area\" false true true 8 Double 0 0 ,First,#,buff400_0,Shape_Area,-1,-1,buff400_1,Shape_Area,-1,-1,buff800_0,Shape_Area,-1,-1,buff800_1,Shape_Area,-1,-1")
 buffers=arcpy.Dissolve_management (allBuffers, os.path.join(gdb,"buffers"))
 print("All buffers have been merged")
-
-
 
 
 
@@ -514,7 +478,7 @@ else:
 #arcpy.DeleteIdentical_management(origins, "field6;field7" , "", "0")                                                           
 
                                                                                                                           
-od=0                                                                                                                           ### FOR ST.JOHN'S!!!
+od=0                                                                                                                          
 for destinations in allstopsList:
     if arcpy.management.GetCount(destinations)[0] != "0":
         outlayer800 = "outlayer800_" + str(od)
@@ -552,15 +516,11 @@ for destinations in allstopsList:
 
         #  Calculate Equivalent Frequency
         arcpy.AddField_management(poiWalkWait, 'EF' + str(od), "DOUBLE", "10", "4", "", "", "NULLABLE", "NON_REQUIRED", "")
-        arcpy.CalculateField_management(poiWalkWait, 'EF' + str(od), "30/([WalkingTime]+0.5*(120/[FREQUENCY]))", "VB", "")                      ### FOR ST.JOHN'S!!!
+        arcpy.CalculateField_management(poiWalkWait, 'EF' + str(od), "30/([WalkingTime]+0.5*(120/[FREQUENCY]))", "VB", "")                  
         print('Equivalent Frequencies for each POI have been calculated....MODE' + str(od))
         joinField(origins, pccfIDfield, poiWalkWait, pccfIDfield, 'EF' + str(od))
         print("EF is in pccf-table----" + str(od))     
     od = od + 1
-
-
-
-########STOP#########
 
 
 
@@ -593,24 +553,14 @@ for i in range(4):
 
 
 
-
-
-
-
 arcpy.AddField_management(PTAI_CT, 'WEF', "DOUBLE", "10", "4", "", "", "NULLABLE", "NON_REQUIRED", "")
-#arcpy.CalculateField_management(PTAI_CT, 'WEF', "[EFsum_CT3]/1", "VB", "")
 #arcpy.CalculateField_management(PTAI_CT, 'WEF', "[EFsum_2]+([EFsum_0]+[EFsum_1]+[EFsum_3]+[EFsum_4])/2", "VB", "")
 arcpy.CalculateField_management(PTAI_CT, 'WEF', "[EFsum_CT2]+([EFsum_CT0]+[EFsum_CT1]+[EFsum_CT3])/1.5", "VB", "")
 print("WEF has been calculated for CT")
 
-
-
 calculatePTAI(PTAI_CT)
 
-
-
 arcpy.AddField_management(PTAI_DA, 'WEF', "DOUBLE", "10", "4", "", "", "NULLABLE", "NON_REQUIRED", "")
-#arcpy.CalculateField_management(PTAI_DA, 'WEF', "[EFsum_CT3]/1", "VB", "")
 #arcpy.CalculateField_management(PTAI_DA, 'WEF', "[EFsum_2]+([EFsum_0]+[EFsum_1]+[EFsum_3]+[EFsum_4])/2", "VB", "")
 arcpy.CalculateField_management(PTAI_DA, 'WEF', "[EFsum_CT2]+([EFsum_CT0]+[EFsum_CT1]+[EFsum_CT3])/1.5", "VB", "")
 print("WEF has been calculated for DA")
