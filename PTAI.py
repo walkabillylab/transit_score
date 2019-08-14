@@ -268,15 +268,22 @@ def spatialJoinCTsum(targetFeatures,joinFeatures, output):
       
 
 #Variables:
-path = "./NEW_output"
-if os.path.exists(path):
-    shutil.rmtree(path)
-os.mkdir(path)
-output_dir = path
+path1 = "./intermediate"
+if os.path.exists(path1):
+    shutil.rmtree(path1)
+os.mkdir(path1)
+inter_dir = path1
+
+path2 = "./output"
+if os.path.exists(path2):
+    shutil.rmtree(path2)
+os.mkdir(path2)
+output_dir = path2
+
 input_dir="./input"
 
-da=os.path.join(input_dir,"DA_Halifax_EqD.shp")
-CT=os.path.join(input_dir,"CT_Halifax_EqD.shp")
+da=os.path.join(input_dir,"DA_Oakville_EqD.shp")
+CT=os.path.join(input_dir,"CT_Oakville_EqD.shp")
 
 WGSCoords = "GEOGCS['GCS_WGS_1984',DATUM['D_WGS_1984', \
     SPHEROID['WGS_1984',6378137.0,298.257223563]], \
@@ -288,19 +295,19 @@ EqD_CS="PROJCS['North_America_Equidistant_Conic',GEOGCS['GCS_North_American_1983
 
 
 
-stop_times = os.path.join(output_dir, 'stop_times.txt')
-trips = os.path.join(output_dir, "trips.txt")
-routes = os.path.join(output_dir, "routes.txt")
-stops = os.path.join(output_dir,'stops.txt')
+stop_times = os.path.join(inter_dir, 'stop_times.txt')
+trips = os.path.join(inter_dir, "trips.txt")
+routes = os.path.join(inter_dir, "routes.txt")
+stops = os.path.join(inter_dir,'stops.txt')
 
 
-origins = os.path.join(input_dir,'PCCF_Halifax_EqD.shp')
+origins = os.path.join(input_dir,'PCCF_Oakville_EqD.shp')
 
-network = os.path.join(input_dir,'Roads_Halifax_EqD_ND.nd')
+network = os.path.join(input_dir,'Roads_Oakville_EqD_ND.nd')
 
 
-gdb = arcpy.CreateFileGDB_management(output_dir, "gtfs.gdb")
-gdb = os.path.join(output_dir,'gtfs.gdb')
+gdb = arcpy.CreateFileGDB_management(inter_dir, "gtfs.gdb")
+gdb = os.path.join(inter_dir,'gtfs.gdb')
 
 stops_timeTableName = 'stops_timeTable' 
 tripsTableName = "tripsTable" 
@@ -322,7 +329,7 @@ mode2 = []
 mode3 = []
 
 with zipfile.ZipFile("gtfs.zip", "r") as zip_ref:
-    zip_ref.extractall(output_dir)
+    zip_ref.extractall(inter_dir)
 
 getGDBtable(stop_times, stops_timeTableName)
 getGDBtable(trips, tripsTableName)
@@ -358,11 +365,11 @@ for mode in route_type_list:
 
     # Join the contents of the FrequencyCount Table to the stops.shp based on the common attribute field stop_id
     joinField(stopsfeature, 'stop_id', frequencyCount, 'stop_id', ['FREQUENCY'])
-    arcpy.FeatureClassToFeatureClass_conversion(stopsfeature, output_dir,
+    arcpy.FeatureClassToFeatureClass_conversion(stopsfeature, inter_dir,
                                                 "stops79_84mode" + str(k) + ".shp",
                                                 "\"FREQUENCY\" <>0 OR \"FREQUENCY\" IS NOT NULL")
     arcpy.DeleteField_management(stopsfeature, 'FREQUENCY')
-    stops79_84 = os.path.join(output_dir, "stops79_84mode" + str(k) + ".shp")
+    stops79_84 = os.path.join(inter_dir, "stops79_84mode" + str(k) + ".shp")
     arcpy.DeleteIdentical_management(stops79_84, ["stop_code"])
     print("-----" + stops79_84 + "has been created")
 
@@ -473,7 +480,7 @@ else:
 
 # Set local variables
 
-#destinationsList = [os.path.join(output_dir,"stops79_EqDmode0.shp"),os.path.join(output_dir,"stops79_EqDmode1.shp"),os.path.join(output_dir,"stops79_EqDmode2.shp")]
+#destinationsList = [os.path.join(inter_dir,"stops79_EqDmode0.shp"),os.path.join(inter_dir,"stops79_EqDmode1.shp"),os.path.join(inter_dir,"stops79_EqDmode2.shp")]
 
 # Delete Duplicates from PCCF
 #arcpy.DeleteIdentical_management(origins, "field6;field7" , "", "0")                                                           
@@ -483,7 +490,7 @@ od=0
 for destinations in allstopsList:
     if arcpy.management.GetCount(destinations)[0] != "0":
         outlayer800 = "outlayer800_" + str(od)
-        output_layer_file = os.path.join(output_dir, outlayer800 + ".lyrx")
+        output_layer_file = os.path.join(inter_dir, outlayer800 + ".lyrx")
         # Create a new OD Cost matrix layer. * Maximum walking distance to a bus stop is 800m.
         result_object = arcpy.MakeODCostMatrixLayer_na(network, outlayer800, "Length", "800", 1)
         # Get the layer object from the result object.
@@ -538,7 +545,6 @@ for CTfield in CTfields:
     CTfieldsName.append(CTfield.name)
 for i in range(4):
     if ('EFsum_CT'+str(i)) not in CTfieldsName:
-        print(i)
         arcpy.AddField_management(PTAI_CT, 'EFsum_CT'+str(i), "DOUBLE", "10", "4", "", "", "NULLABLE", "NON_REQUIRED", "")
         arcpy.CalculateField_management(PTAI_CT, 'EFsum_CT'+str(i), 0, "VB", "")
 
@@ -548,7 +554,6 @@ for DAfield in DAfields:
     DAfieldsName.append(DAfield.name)
 for i in range(4):
     if ('EFsum_CT'+str(i)) not in DAfieldsName:
-        print(i)
         arcpy.AddField_management(PTAI_DA, 'EFsum_CT'+str(i), "DOUBLE", "10", "4", "", "", "NULLABLE", "NON_REQUIRED", "")
         arcpy.CalculateField_management(PTAI_DA, 'EFsum_CT'+str(i), 0, "VB", "")
 
@@ -570,6 +575,7 @@ print("WEF has been calculated for DA")
 for od in range(4):
     arcpy.DeleteField_management(origins, 'EF' + str(od))
 
+arcpy.FeatureClassToShapefile_conversion([PTAI_CT, PTAI_DA], output_dir)
 
 print ('Done!')
 
