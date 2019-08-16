@@ -368,7 +368,7 @@ for mode in route_type_list:
                                                 "\"FREQUENCY\" <>0 OR \"FREQUENCY\" IS NOT NULL")
     arcpy.DeleteField_management(stopsfeature, 'FREQUENCY')
     stops79_84 = os.path.join(inter_dir, "stops79_84mode" + str(k) + ".shp")
-    arcpy.DeleteIdentical_management(stops79_84, ["stop_code"])
+    #arcpy.DeleteIdentical_management(stops79_84, ["stop_code"])
     print("-----" + stops79_84 + "has been created")
 
     if k == 0:
