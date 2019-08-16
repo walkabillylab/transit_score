@@ -12,13 +12,11 @@
 ##make sure you replace "Halifax" to the other city name
 
 
-import urllib2                         #This is a extensible library for opening URLs
 import zipfile                         #This module provides tools to create, read, write, append, and list a ZIP file
 import arcpy                           #This package provides a useful and productive way to perform geographic data analysis, data conversion, data management, and map automation with Python.
 import os                              #Provides os.path.join 
 import csv                             #This package provides tool to open and read csv files
 import sys
-arcpy.CheckOutExtension("3D")
 import shutil
 
 
